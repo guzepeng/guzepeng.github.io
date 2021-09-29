@@ -206,7 +206,7 @@
 <li><p>具体如何使 <code>源码编译</code>,可以移步我的掘金博客<a class="link"   target="_blank" rel="noopener" href="https://juejin.cn/post/6868929959076265997" >源码编译配置<i class="fas fa-external-link-alt"></i></a> （可以的话点个小赞最好了🤟）</p>
 </li>
 </ul>
-<h2 id="1-alloc-底层原理"><a href="#1-alloc-底层原理" class="headerlink" title="1. alloc 底层原理"></a>1. alloc 底层原理</h2><ul>
+<h2 id="alloc-底层原理"><a href="#alloc-底层原理" class="headerlink" title="alloc 底层原理"></a>alloc 底层原理</h2><h3 id="alloc核心代码定位"><a href="#alloc核心代码定位" class="headerlink" title="alloc核心代码定位"></a>alloc核心代码定位</h3><ul>
 <li>直接搞起了~  首先写行代码</li>
 </ul>
 <figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">XGPerson * person = [[XGPerson alloc] init];</span><br></pre></td></tr></table></figure>
@@ -216,6 +216,80 @@
                      data-src="/images/ios_underlying/alloc_new/alloc1.png"
                      
                 ></p>
+<ul>
+<li>我们可以打断点，然后跟进他的源码，看看他的步骤，然后定位核心代码</li>
+</ul>
+<blockquote>
+<p>小谷偷偷的画了一波图</p>
+</blockquote>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/ios_underlying/alloc_new/alloc2.png"
+                     
+                ></p>
+<ul>
+<li>我们定位到的代码 ~</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">static ALWAYS_INLINE id</span><br><span class="line">_class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,</span><br><span class="line">                              int construct_flags = OBJECT_CONSTRUCT_NONE,</span><br><span class="line">                              bool cxxConstruct = true,</span><br><span class="line">                              size_t *outAllocatedSize = nil)</span><br><span class="line">&#123;</span><br><span class="line">    ASSERT(cls-&gt;isRealized());</span><br><span class="line"></span><br><span class="line">    // Read class&#x27;s info bits all at once for performance</span><br><span class="line">    bool hasCxxCtor = cxxConstruct &amp;&amp; cls-&gt;hasCxxCtor();</span><br><span class="line">    bool hasCxxDtor = cls-&gt;hasCxxDtor();</span><br><span class="line">    bool fast = cls-&gt;canAllocNonpointer();</span><br><span class="line">    size_t size;</span><br><span class="line"></span><br><span class="line">    size = cls-&gt;instanceSize(extraBytes);</span><br><span class="line">    if (outAllocatedSize) *outAllocatedSize = size;</span><br><span class="line"></span><br><span class="line">    id obj;</span><br><span class="line">    if (zone) &#123;</span><br><span class="line">        obj = (id)malloc_zone_calloc((malloc_zone_t *)zone, 1, size);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        obj = (id)calloc(1, size);</span><br><span class="line">    &#125;</span><br><span class="line">    if (slowpath(!obj)) &#123;</span><br><span class="line">        if (construct_flags &amp; OBJECT_CONSTRUCT_CALL_BADALLOC) &#123;</span><br><span class="line">            return _objc_callBadAllocHandler(cls);</span><br><span class="line">        &#125;</span><br><span class="line">        return nil;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (!zone &amp;&amp; fast) &#123;</span><br><span class="line">        obj-&gt;initInstanceIsa(cls, hasCxxDtor);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        // Use raw pointer isa on the assumption that they might be</span><br><span class="line">        // doing something weird with the zone or RR.</span><br><span class="line">        obj-&gt;initIsa(cls);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (fastpath(!hasCxxCtor)) &#123;</span><br><span class="line">        return obj;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    construct_flags |= OBJECT_CONSTRUCT_FREE_ONFAILURE;</span><br><span class="line">    return object_cxxConstructFromClass(obj, cls, construct_flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="alloc核心代码探究"><a href="#alloc核心代码探究" class="headerlink" title="alloc核心代码探究"></a>alloc核心代码探究</h3><ul>
+<li>先来一波简单的图片注释说明</li>
+</ul>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/ios_underlying/alloc_new/alloc3.png"
+                     
+                ></p>
+<ul>
+<li><p>通过上面我们可以知道。alloc主要是3步操作</p>
+<ul>
+<li>计算所要开辟内存的大小</li>
+<li>开辟内存空间</li>
+<li>将开辟的空间和isa关联起来（也就是我们说的对象了）</li>
+</ul>
+</li>
+<li><p>我们来看下 开辟内存大小的方法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">inline size_t instanceSize(size_t extraBytes) const &#123;</span><br><span class="line">	//如果已经初始化过了，直接在cache 中取</span><br><span class="line">       if (fastpath(cache.hasFastInstanceSize(extraBytes))) &#123;</span><br><span class="line">           return cache.fastInstanceSize(extraBytes);</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       size_t size = alignedInstanceSize() + extraBytes;</span><br><span class="line">       // CF requires all objects be at least 16 bytes.</span><br><span class="line">       if (size &lt; 16) size = 16;</span><br><span class="line">       return size;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>我们可以发现，他使用的是<code>16字节对齐</code>。</p>
+</blockquote>
+</li>
+<li><p>我们再来研究下：如何把内存关联起来的。</p>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">inline void </span><br><span class="line">objc_object::initIsa(Class cls, bool nonpointer, UNUSED_WITHOUT_INDEXED_ISA_AND_DTOR_BIT bool hasCxxDtor)</span><br><span class="line">&#123; </span><br><span class="line">    ASSERT(!isTaggedPointer()); </span><br><span class="line">    </span><br><span class="line">    isa_t newisa(0);</span><br><span class="line"></span><br><span class="line">    if (!nonpointer) &#123;</span><br><span class="line">        newisa.setClass(cls, this);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        ASSERT(!DisableNonpointerIsa);</span><br><span class="line">        ASSERT(!cls-&gt;instancesRequireRawIsa());</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#if SUPPORT_INDEXED_ISA</span><br><span class="line">        ASSERT(cls-&gt;classArrayIndex() &gt; 0);</span><br><span class="line">        newisa.bits = ISA_INDEX_MAGIC_VALUE;</span><br><span class="line">        // isa.magic is part of ISA_MAGIC_VALUE</span><br><span class="line">        // isa.nonpointer is part of ISA_MAGIC_VALUE</span><br><span class="line">        newisa.has_cxx_dtor = hasCxxDtor;</span><br><span class="line">        newisa.indexcls = (uintptr_t)cls-&gt;classArrayIndex();</span><br><span class="line">#else</span><br><span class="line">        newisa.bits = ISA_MAGIC_VALUE;</span><br><span class="line">        // isa.magic is part of ISA_MAGIC_VALUE</span><br><span class="line">        // isa.nonpointer is part of ISA_MAGIC_VALUE</span><br><span class="line">#   if ISA_HAS_CXX_DTOR_BIT</span><br><span class="line">        newisa.has_cxx_dtor = hasCxxDtor;</span><br><span class="line">#   endif</span><br><span class="line">        newisa.setClass(cls, this);</span><br><span class="line">#endif</span><br><span class="line">        newisa.extra_rc = 1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // This write must be performed in a single store in some cases</span><br><span class="line">    // (for example when realizing a class because other threads</span><br><span class="line">    // may simultaneously try to use the class).</span><br><span class="line">    // fixme use atomics here to guarantee single-store and to</span><br><span class="line">    // guarantee memory order w.r.t. the class index table</span><br><span class="line">    // ...but not too atomic because we don&#x27;t want to hurt instantiation</span><br><span class="line">    isa = newisa;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>这就相当于 填充isa了。（里面具体的变量名称。我会在isa博客的时候在叙述~）</p>
+</blockquote>
+<ul>
+<li>兄弟们，差不多了。有心的兄弟们可以总结下alloc的流程图。</li>
+</ul>
+<h2 id="new的原理探究"><a href="#new的原理探究" class="headerlink" title="new的原理探究"></a>new的原理探究</h2><h3 id="new-的流程"><a href="#new-的流程" class="headerlink" title="new 的流程"></a>new 的流程</h3><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/ios_underlying/alloc_new/new1.png"
+                     
+                ></p>
+<blockquote>
+<p>首先我们可以看出。<code>new</code> 相比较 <code>alloc</code> 多出一个 <code>init</code></p>
+</blockquote>
+<h3 id="new-和-alloc的区别"><a href="#new-和-alloc的区别" class="headerlink" title="new 和 alloc的区别"></a>new 和 alloc的区别</h3><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/ios_underlying/alloc_new/new2.png"
+                     
+                ></p>
+<ul>
+<li>虽然 <code>allocWithZone</code> 传值不同，但是他不会走~  所以<code>new</code>比<code>alloc</code>单纯了多了一个<code>init</code></li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li><p>写这篇博客的时候，有点懒惰了，哈哈。本来想写的在详细点的~</p>
+</li>
+<li><p>不过哪里写的不好，兄弟们可以评论，以后我写的时候我就会改~</p>
+</li>
+</ul>
 
         </div>
 
@@ -341,7 +415,7 @@
         <aside class="page-aside">
             <div class="post-toc-wrap">
     <div class="post-toc">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#iOS%E4%B8%AD%E7%9A%84alloc%E5%92%8Cnew"><span class="nav-number">1.</span> <span class="nav-text">iOS中的alloc和new</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-alloc-%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">1. alloc 底层原理</span></a></li></ol></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#iOS%E4%B8%AD%E7%9A%84alloc%E5%92%8Cnew"><span class="nav-number">1.</span> <span class="nav-text">iOS中的alloc和new</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#alloc-%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">alloc 底层原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#alloc%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81%E5%AE%9A%E4%BD%8D"><span class="nav-number">1.1.1.</span> <span class="nav-text">alloc核心代码定位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#alloc%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81%E6%8E%A2%E7%A9%B6"><span class="nav-number">1.1.2.</span> <span class="nav-text">alloc核心代码探究</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#new%E7%9A%84%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6"><span class="nav-number">1.2.</span> <span class="nav-text">new的原理探究</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#new-%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">new 的流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#new-%E5%92%8C-alloc%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.2.2.</span> <span class="nav-text">new 和 alloc的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.3.</span> <span class="nav-text">总结</span></a></li></ol></li></ol>
     </div>
 </div>
         </aside>
