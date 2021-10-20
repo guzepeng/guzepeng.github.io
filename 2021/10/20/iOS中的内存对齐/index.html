@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="每当有学习的念头时，都是未来自己的求救声。莫犹豫！">
+    <meta name="author" content="guzepeng">
+    
+    <title>
+        
+            iOS中的内存对齐 |
+        
+        XG&#39;s blog
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <link rel="shortcut icon" href="/images/gzp.svg">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/css/font-awesome.min.css">
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"example.com","root":"/","language":"zh-Hans","path":"search.json"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":true,"expand_all":true,"init_open":true},"style":{"primary_color":"#0066CC","avatar":"/images/gzp.svg","favicon":"/images/gzp.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"总有人间一两风, 填我十万八千梦."},"scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"local_search":{"enable":true,"preload":true},"code_copy":{"enable":true,"style":"mac"},"pjax":{"enable":false},"lazyload":{"enable":true},"version":"3.4.3"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+  </script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+        <span class="scroll-progress-bar"></span>
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            
+                <a class="logo-image" href="/">
+                    <img src="/images/gzp.svg">
+                </a>
+            
+            <a class="logo-title" href="/">
+                XG&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/categories"
+                            >
+                                CATEGORIES
+                            </a>
+                        </li>
+                    
+                    
+                        <li class="menu-item search search-popup-trigger">
+                            <i class="fas fa-search"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/categories">CATEGORIES</a>
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">iOS中的内存对齐</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/gzp.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">guzepeng</span>
+                        
+                            <span class="author-label">iOS</span>
+                        
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i>&nbsp;2021-10-20 15:13:30
+    </span>
+    
+        <span class="article-categories article-meta-item">
+            <i class="fas fa-folder"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/categories/iOS%E5%BA%95%E5%B1%82%E6%8E%A2%E7%B4%A2%E4%B9%8B%E6%97%85/">iOS底层探索之旅</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fas fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/%E5%8D%9A%E5%AE%A2-iOS-%E5%BA%95%E5%B1%82/">博客 iOS 底层</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+                    </div>
+                </div>
+            </div>
+        
+
+        <div class="article-content markdown-body">
+            <h1 id="内存对齐的定义"><a href="#内存对齐的定义" class="headerlink" title="内存对齐的定义"></a>内存对齐的定义</h1><ul>
+<li><p>基本所有的程序员，<code>内存对齐</code> ，基本都会听说过。</p>
+</li>
+<li><p><code>内存对齐</code> 是编译器的管辖范围，编译器为程序中的每个数据单元，安排合适的位置。</p>
+</li>
+<li><p>对于大部分研究过底层的程序员来说，<code>内存对齐</code> 对他们来说都应该是<code>透明的</code></p>
+</li>
+</ul>
+<h1 id="内存对齐的意义"><a href="#内存对齐的意义" class="headerlink" title="内存对齐的意义"></a>内存对齐的意义</h1><blockquote>
+<p>也是为啥要内存对齐呢？</p>
+</blockquote>
+<blockquote>
+<p>由于本人文采不好，借用下<a class="link"   target="_blank" rel="noopener" href="https://baike.baidu.com/item/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90/9537460?fr=kg_qa" >百度百科<i class="fas fa-external-link-alt"></i></a>的解释</p>
+</blockquote>
+<ul>
+<li><p> 平台原因(移植原因)：不是所有的硬件平台都能访问任意地址上的任意数据的；某些硬件平台只能在某些地址处取某些特定类型的数据，否则抛出硬件异常。</p>
+</li>
+<li><p> 性能原因：数据结构(尤其是栈)应该尽可能地在自然边界上对齐。原因在于，为了访问未对齐的内存，处理器需要作两次内存访问；而对齐的内存访问仅需要一次访问。</p>
+</li>
+</ul>
+<h1 id="内存对齐的规则"><a href="#内存对齐的规则" class="headerlink" title="内存对齐的规则"></a>内存对齐的规则</h1><blockquote>
+<p> 我也嫌弃文字说明，有麻烦又长，还懒得看~</p>
+<p>我后面会举例说明的。</p>
+</blockquote>
+<ul>
+<li><p>1、数据成员对⻬规则:结构(struct)(或联合(union))的数据成员，第一个数据成员放在offset为0的地方，以后每个数据成员存储的起始位置要从该成员大小或者成员的子成员大小(只要该成员有子成员，比如说是数组，结构体等)的整数倍开始(比如int为4字节,则要从4的整数倍地址开始存储。 min(当前开始的位置mn) m=9 n=4 那么 9 10 11 12、就要从12开始存储</p>
+</li>
+<li><p>2、结构体作为成员:如果一个结构里有某些结构体成员,则结构体成员要从其内部最大元素大小的整数倍地址开始存储.(struct a里存有struct b,b 里有char,int ,double等元素,那b应该从8的整数倍开始存储.)</p>
+</li>
+<li><p>3、收尾工作:结构体的总大小,也就是sizeof的结果,.必须是其内部最大成员的整数倍.不足的要补⻬</p>
+</li>
+</ul>
+<h2 id="各类型所占字节"><a href="#各类型所占字节" class="headerlink" title="各类型所占字节"></a>各类型所占字节</h2><blockquote>
+<p>我也知道大家这个表都知道，但是不把图啪上感觉没有仪式感</p>
+</blockquote>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="../images/ios_underlying/Memory_alignment/memory1.png"
+                     
+                ></p>
+<h2 id="内存对齐举例"><a href="#内存对齐举例" class="headerlink" title="内存对齐举例"></a>内存对齐举例</h2><ul>
+<li><p>只看理论啥收获都没有感觉，还是不让代码验证解释比较痛快。</p>
+</li>
+<li><p>example one :</p>
+</li>
+</ul>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">注：&#123;&#125;代表解释说明 。</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> XGStruct1 &#123;</span><br><span class="line">    <span class="keyword">double</span> a;   <span class="comment">// 8&#123;所占字节数&#125; (0&#123;开始位置&#125;-7&#123;结束位置&#125;)&#123;所占字节位置&#125;</span></span><br><span class="line">    <span class="keyword">char</span> b;     <span class="comment">// 1&#123;所占字节数&#125; [8&#123;开始位置&#125; 1&#123;所占字节数&#125;] (8)&#123;存储字节位置&#125;</span></span><br><span class="line">    <span class="keyword">int</span> c;      <span class="comment">// 4&#123;所占字节数&#125; [9&#123;开始位置&#125; 4&#123;所占字节数&#125;] 9 10 11 (12 13 14 15)&#123;存储字节位置&#125;</span></span><br><span class="line">    <span class="keyword">short</span> d;    <span class="comment">// 2&#123;所占字节数&#125; [16&#123;开始位置&#125; 2&#123;所占字节数&#125;] (16 17)&#123;存储字节位置&#125;</span></span><br><span class="line">&#125;struct1;</span><br><span class="line"></span><br><span class="line">解释说明：</span><br><span class="line">内存对齐规则<span class="number">1</span>：开始位置必须是所占字节数的整数倍，才能开始存。</span><br><span class="line">（举例：<span class="keyword">char</span> b,由于开始位置是所占字节数的整数倍可以直接存，<span class="keyword">int</span> c ，开始位置是从<span class="number">9</span>，并不是<span class="number">4</span>的整数倍，所以从<span class="number">12</span>开始存）</span><br><span class="line"></span><br><span class="line">存储大小是：<span class="number">18</span>&#123;<span class="number">0</span><span class="number">-17</span>&#125;</span><br><span class="line"></span><br><span class="line">由于结构体中存在<span class="keyword">double</span>为最大字节数：<span class="number">8</span></span><br><span class="line">（内存对齐规则<span class="number">3</span>：所占内存必须是最大字节数的整数倍。所以必须是<span class="number">8</span>的整数倍。<span class="number">18</span>--&gt;<span class="number">24</span>）</span><br><span class="line"></span><br><span class="line">所以所占内存大小是<span class="number">24.</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<ul>
+<li>输出log ， 确认下</li>
+</ul>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSLog</span>(<span class="string">@&quot;%lu&quot;</span>,<span class="keyword">sizeof</span>(struct1));</span><br><span class="line"></span><br><span class="line">log输出：<span class="number">24</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>example two:</li>
+</ul>
+<blockquote>
+<p>这个应该就比较形象了~</p>
+</blockquote>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> XGStruct2 &#123;</span><br><span class="line">    <span class="keyword">int</span> b;      <span class="comment">//4&#123;所占字节数&#125; [0&#123;开始位置&#125; 4&#123;所占字节数&#125;],(0 1 2 3)&#123;存储字节位置&#125;</span></span><br><span class="line">    <span class="keyword">char</span> c;     <span class="comment">//1&#123;所占字节数&#125; [4&#123;开始位置&#125; 1&#123;所占字节数&#125;], (4)&#123;存储字节位置&#125;</span></span><br><span class="line">    <span class="keyword">short</span> d;    <span class="comment">//2&#123;所占字节数&#125; [5&#123;开始位置&#125; 2&#123;所占字节数&#125;], 5 (6 7)&#123;存储字节位置&#125;</span></span><br><span class="line">    <span class="keyword">short</span> e;    <span class="comment">//2&#123;所占字节数&#125; [8&#123;开始位置&#125; 2&#123;所占字节数&#125;], (8 9)&#123;存储字节位置&#125;</span></span><br><span class="line">&#125;struct2;</span><br><span class="line"></span><br><span class="line">解释说明：</span><br><span class="line"><span class="number">1</span>、内存所占大小是 <span class="number">10</span>（<span class="number">0</span><span class="number">-9</span>）</span><br><span class="line"><span class="number">2</span>、内存中最大的字节是<span class="keyword">int</span>（<span class="number">4</span>），所以是<span class="number">4</span>的整数倍。</span><br><span class="line">理论结果：<span class="number">12</span></span><br><span class="line"></span><br><span class="line">验证：</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@&quot;%lu&quot;</span>,<span class="keyword">sizeof</span>(struct2));</span><br><span class="line">输出：</span><br><span class="line"><span class="number">12</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<ul>
+<li>兄弟们已经完美掌握了 <code>内存对齐</code> 了</li>
+</ul>
+<h2 id="内存对齐规则的扩展"><a href="#内存对齐规则的扩展" class="headerlink" title="内存对齐规则的扩展"></a>内存对齐规则的扩展</h2><blockquote>
+<p>以上2个例子应该可以说明内存对齐规则了。我相信大家也都懂了。那么，咱们来一波进阶： <code>结构体嵌套结构体</code> </p>
+</blockquote>
+<ul>
+<li>用上面的例子修改下~</li>
+</ul>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> XGStruct1 &#123;</span><br><span class="line">    <span class="keyword">double</span> a; </span><br><span class="line">    <span class="keyword">char</span> b;  </span><br><span class="line">    <span class="keyword">int</span> c;     </span><br><span class="line">    <span class="keyword">short</span> d;    </span><br><span class="line">&#125;struct1;</span><br><span class="line"><span class="comment">//已证</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> XGStruct2 &#123;</span><br><span class="line">    <span class="keyword">int</span> b;      </span><br><span class="line">    <span class="keyword">char</span> c;     </span><br><span class="line">    <span class="keyword">short</span> d;    </span><br><span class="line">    <span class="keyword">short</span> e;    </span><br><span class="line">&#125;struct2;</span><br><span class="line"><span class="comment">//已证</span></span><br><span class="line"></span><br><span class="line">我们把XGStruct2 改变下，加入XGStruct1,变成XGStruct3:</span><br><span class="line"><span class="keyword">struct</span> XGStruct3 &#123;</span><br><span class="line">    <span class="keyword">int</span> b;      </span><br><span class="line">    <span class="keyword">char</span> c;     </span><br><span class="line">    <span class="keyword">short</span> d;    </span><br><span class="line">    <span class="keyword">short</span> e;</span><br><span class="line">    <span class="keyword">struct</span> XGStruct1 xgs;</span><br><span class="line">&#125;struct3;</span><br><span class="line"></span><br><span class="line">大家可以先想想下，所占内存大小？</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>开始解释了啊~</li>
+</ul>
+<blockquote>
+<p>首先。我们先通过规则，大概猜一下，会是什么样子的.</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">先换一种好说明的写法</span><br><span class="line">struct XGStruct3 &#123;</span><br><span class="line">    int b;      //4&#123;所占字节数&#125; [0&#123;开始位置&#125; 4&#123;所占字节数&#125;],(0 1 2 3)&#123;存储字节位置&#125;</span><br><span class="line">    char c;     //1&#123;所占字节数&#125; [4&#123;开始位置&#125; 1&#123;所占字节数&#125;], (4)&#123;存储字节位置&#125;</span><br><span class="line">    short d;    //2&#123;所占字节数&#125; [5&#123;开始位置&#125; 2&#123;所占字节数&#125;], 5 (6 7)&#123;存储字节位置&#125;</span><br><span class="line">    short e;    //2&#123;所占字节数&#125; [8&#123;开始位置&#125; 2&#123;所占字节数&#125;], (8 9)&#123;存储字节位置&#125;</span><br><span class="line">    struct XGStruct4 &#123;</span><br><span class="line">        double a;// [10 8] 10 11 12 13 14 15 (16 17 18 19 20 21 22 23)</span><br><span class="line">        int b;   // [24 4] (24 25 26 27)</span><br><span class="line">        char c;  // [28 1] (28)</span><br><span class="line">        short d; // [29 2] 29 (30 31)</span><br><span class="line">    &#125;xgs;</span><br><span class="line">&#125;struct3;</span><br><span class="line"></span><br><span class="line">所占大小是32 （0-31）</span><br><span class="line">里面最大类型是double（8），又是8的倍数，那岂不是结果是32，</span><br><span class="line"></span><br><span class="line">验证一波：</span><br><span class="line">NSLog(@&quot;%lu&quot;,sizeof(struct3));</span><br><span class="line">输出：</span><br><span class="line">32</span><br><span class="line"></span><br><span class="line">还真是！！！！！</span><br></pre></td></tr></table></figure>
+
+<p><strong>兄弟们可以自己写一些例子来辅证下~。</strong></p>
+
+        </div>
+
+        
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：iOS中的内存对齐</li>
+        <li>Post author：guzepeng</li>
+        <li>Create time：2021-10-20 15:13:30</li>
+        <li>
+            Post link：https://guzepeng.github.io/2021/10/20/iOS中的内存对齐/
+        </li>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
+        </li>
+    </ul>
+</div>
+
+            </div>
+        
+
+        
+            <div class="article-nav">
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2021/10/20/%E8%81%94%E5%90%88%E4%BD%93-%E4%BD%8D%E5%9F%9F/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">联合体&amp;位域</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
+        
+
+        
+            <div class="comment-container">
+                <div class="comments-container">
+    <div id="comment-anchor"></div>
+    <div class="comment-area-title">
+        <i class="fas fa-comments">&nbsp;Comments</i>
+    </div>
+    
+
+        
+            
+    <div id="gitalk-container"></div>
+    <script 
+            src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
+    <script >
+
+        function loadGitalk() {
+            let __gitalk__pathname = decodeURI(location.pathname);
+            const __gitalk__pathnameLength = __gitalk__pathname.length;
+            const __gitalk__pathnameMaxLength = 50;
+            if (__gitalk__pathnameLength > __gitalk__pathnameMaxLength) {
+                __gitalk__pathname = __gitalk__pathname.substring(0, __gitalk__pathnameMaxLength - 3) + '...';
+            }
+
+            try {
+                Gitalk && new Gitalk({
+                    clientID: '8a2f100b75d7638bc1e4',
+                    clientSecret: '89df1f689fc56a91466118785c149315b0d02cf2',
+                    repo: 'blogComment',
+                    owner: 'guzepeng',
+                    admin: ['guzepeng'],
+                    id: __gitalk__pathname,
+                    language: 'zh-Hans'
+                }).render('gitalk-container');
+
+            } catch (e) {
+                window.Gitalk = null;
+            }
+        }
+
+        if ('false') {
+            const loadGitalkTimeout = setTimeout(() => {
+                loadGitalk();
+                clearTimeout(loadGitalkTimeout);
+            }, 1000);
+        } else {
+            window.addEventListener('DOMContentLoaded', loadGitalk);
+        }
+    </script>
+
+
+
+        
+    
+</div>
+
+            </div>
+        
+    </div>
+</div>
+
+
+                
+            </div>
+
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span>&nbsp;-&nbsp;
+            
+            2021&nbsp;<i class="fas fa-heart icon-animate"></i>&nbsp;<a href="/">guzepeng</a>
+        </div>
+        
+        
+    </div>
+</footer>
+
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+            <li class="go-comment">
+                <i class="fas fa-comment"></i>
+            </li>
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="arrow-up fas fa-arrow-up"></i>
+                <span class="percent"></span>
+            </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">1.</span> <span class="nav-text">内存对齐的定义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E6%84%8F%E4%B9%89"><span class="nav-number">2.</span> <span class="nav-text">内存对齐的意义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E8%A7%84%E5%88%99"><span class="nav-number">3.</span> <span class="nav-text">内存对齐的规则</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%84%E7%B1%BB%E5%9E%8B%E6%89%80%E5%8D%A0%E5%AD%97%E8%8A%82"><span class="nav-number">3.1.</span> <span class="nav-text">各类型所占字节</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E4%B8%BE%E4%BE%8B"><span class="nav-number">3.2.</span> <span class="nav-text">内存对齐举例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E8%A7%84%E5%88%99%E7%9A%84%E6%89%A9%E5%B1%95"><span class="nav-number">3.3.</span> <span class="nav-text">内存对齐规则的扩展</span></a></li></ol></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fas fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="Search..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="popup-btn-close">
+                <i class="fas fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+</main>
+
+
+
+<script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/utils.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/main.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/header-shrink.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/back2top.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/dark-light-toggle.js"></script>
+
+
+    <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/local-search.js"></script>
+
+
+
+    <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/code-copy.js"></script>
+
+
+
+    <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/lazyload.js"></script>
+
+
+<div class="post-scripts">
+    
+        <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/left-side-toggle.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/libs/anime.min.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.4.3/source/js/toc.js"></script>
+    
+</div>
+
+
+
+</body>
+</html>
